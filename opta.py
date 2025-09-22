@@ -228,19 +228,26 @@ def get_countries():
 
 @app.route('/opta/leagues', methods=['GET'])
 def get_leagues():
-    # aceita 'country' ou 'country_code'
-    country = request.args.get('country') or request.args.get('country_code')
+    country = request.args.get('country')
+    country_code = request.args.get('country_code')
     params = {}
+
     if country:
-        params['country'] = country
+        params['country'] = country   # nome completo
+    elif country_code:
+        params['code'] = country_code # código oficial tipo 'BR'
+
     try:
         r = requests.get(f"{BASE_URL}/leagues", headers=HEADERS, params=params, timeout=15)
         r.raise_for_status()
         data = r.json().get('response', [])
-        leagues = [{"id": item['league']['id'], "name": item['league']['name'], "country": item['country']} for item in data]
+        leagues = [{"id": item['league']['id'],
+                    "name": item['league']['name'],
+                    "country": item['country']['name']} for item in data]
         return jsonify(leagues)
     except Exception as e:
         return jsonify({"error": "Failed to fetch leagues", "detail": str(e)}), 502
+
 
 @app.route('/opta/teams', methods=['GET'])
 def get_teams():
